@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camilly Messias - Bolos e Doces Gourmet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #fce4ec;
+            color: #4b0082;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #ff7395;
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background-color: #ffebee;
+        }
+
+        .cart-icon-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+        }
+
+        @keyframes pulse-once {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse-once {
+            animation: pulse-once 0.3s ease-in-out;
+        }
+
+        /* Banner styles */
+        .banner-container {
+            overflow: hidden;
+            width: 100%;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .carousel {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            flex-shrink: 0;
+        }
+
+        /* Product button styles */
+        .product-option {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-option:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .size-selection-btn {
+            background-color: white;
+            color: #ff7395;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .size-selection-btn.active {
+            background-color: #ff7395;
+            color: white;
+        }
+
+        .expanded-details {
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        .expanded-details.show {
+            display: flex;
+            max-height: 300px; /* A safe value to ensure content is visible */
+        }
+    </style>
+</head>
+<body class="bg-[#fce4ec]">
+    <!-- Header -->
+    <header class="bg-[#ff7395] text-white p-4 shadow-md sticky top-0 z-40">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Camilly Messias</h1>
+            <nav class="hidden md:flex space-x-4">
+                <a href="#bolos" class="hover:underline font-semibold text-lg">Bolos</a>
+                <a href="#doces" class="hover:underline font-semibold text-lg">Doces</a>
+                <a href="#carrinho" class="hover:underline font-semibold text-lg">Carrinho</a>
+            </nav>
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="md:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden fixed top-0 left-0 w-full h-full bg-[#ff7395] bg-opacity-95 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 flex justify-end">
+            <button id="close-mobile-menu-btn" class="text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <nav class="flex flex-col items-center space-y-8 text-white text-3xl font-bold mt-10">
+            <a href="#bolos" class="hover:underline" onclick="toggleMobileMenu()">Bolos</a>
+            <a href="#doces" class="hover:underline" onclick="toggleMobileMenu()">Doces</a>
+            <a href="#carrinho" class="hover:underline" onclick="toggleMobileMenu()">Carrinho</a>
+        </nav>
+    </div>
+
+    <!-- Carrinho Icon and Counter -->
+    <div class="cart-icon-container">
+        <button id="cart-btn" class="relative bg-white text-[#ff7395] p-3 rounded-full shadow-lg transition-transform transform hover:scale-110 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.44 1.76-1.07L23 5.42 21.68 4 19.3 11h-7.8L9.2 2H1v2h2.52l3.41 8.79-.1 1.48C5.83 14.8 7 16 7 16H21v-2H7.42c-.44 0-.62-.29-.44-.62l.85-2.02c.16-.39.54-.64.96-.64z"/>
+            </svg>
+            <span id="cart-counter" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-[#ff7395] rounded-full transform translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 opacity-0">0</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- Automatic Image Banner -->
+        <section class="py-10">
+            <div class="banner-container relative w-full h-[250px] sm:h-[350px] md:h-[450px]">
+                <div id="carousel-images" class="carousel h-full">
+                    <div class="carousel-item h-full flex items-center justify-center bg-[#ffebee]">
+                        <img src="https://placehold.co/1000x450/ffebee/ff7395?text=Logo+Camilly+Messias" alt="Logo Camilly Messias" class="object-cover w-full h-full rounded-xl">
+                    </div>
+                    <div class="carousel-item h-full flex items-center justify-center bg-[#ffebee]">
+                        <img src="https://placehold.co/1000x450/ffebee/ff7395?text=Sobre+Mim" alt="Sobre mim" class="object-cover w-full h-full rounded-xl">
+                    </div>
+                    <div class="carousel-item h-full flex items-center justify-center bg-[#ffebee]">
+                        <img src="https://placehold.co/1000x450/ffebee/ff7395?text=Produtos" alt="Produtos" class="object-cover w-full h-full rounded-xl">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Sections -->
+        <section id="bolos" class="py-8">
+            <h2 class="text-3xl font-bold text-center text-[#ff7395] mb-8">Bolos</h2>
+            <div class="space-y-12">
+                <!-- Bolos Premium -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Premium</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Doce de vó -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Doce+de+v%C3%B3" alt="Doce de vó" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Doce de Vó</h4>
+                            <p class="text-white mt-2">Massa branca recheada de doce de leite com nozes e abacaxi.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Doce de Vó" data-size="G" data-price="300" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Doce de Vó" data-size="M" data-price="200" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Doce de Vó" data-size="P" data-price="100" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Mora-ninho -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Mora-ninho" alt="Mora-ninho" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Mora-ninho</h4>
+                            <p class="text-white mt-2">Massa branca recheada de ninho com morango.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Mora-ninho" data-size="G" data-price="300" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Mora-ninho" data-size="M" data-price="200" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Mora-ninho" data-size="P" data-price="100" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Floresta -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Floresta" alt="Floresta" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Floresta</h4>
+                            <p class="text-white mt-2">Massa de chocolate recheada com brigadeiro, raspas de chocolate e cereja.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Floresta" data-size="G" data-price="300" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Floresta" data-size="M" data-price="200" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Premium - Floresta" data-size="P" data-price="100" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bolos Especiais -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Especiais</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Brigadeiro Meio Amargo -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Brigadeiro+Meio+Amargo" alt="Brigadeiro Meio Amargo" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Brigadeiro Meio Amargo</h4>
+                            <p class="text-white mt-2">Massa de chocolate recheada de brigadeiro meio amargo.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Brigadeiro Meio Amargo" data-size="G" data-price="270" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Brigadeiro Meio Amargo" data-size="M" data-price="180" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Brigadeiro Meio Amargo" data-size="P" data-price="90" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Nutelissimo -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Nutelissimo" alt="Nutelissimo" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Nutelissimo</h4>
+                            <p class="text-white mt-2">Massa de chocolate recheada de ninho com Nutella.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Nutelissimo" data-size="G" data-price="270" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Nutelissimo" data-size="M" data-price="180" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Nutelissimo" data-size="P" data-price="90" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Ferrero Rocher -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Ferrero+Rocher" alt="Ferrero Rocher" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Ferrero Rocher</h4>
+                            <p class="text-white mt-2">Massa de chocolate recheada de brigadeiro, Nutella e castanha de caju.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Ferrero Rocher" data-size="G" data-price="270" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Ferrero Rocher" data-size="M" data-price="180" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Especial - Ferrero Rocher" data-size="P" data-price="90" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bolos Tradicionais -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Tradicionais</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Brigadeiro ao leite -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Brigadeiro+ao+Leite" alt="Brigadeiro ao leite" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Brigadeiro ao Leite</h4>
+                            <p class="text-white mt-2">Massa de chocolate com recheio de brigadeiro.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Brigadeiro ao Leite" data-size="G" data-price="240" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Brigadeiro ao Leite" data-size="M" data-price="160" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Brigadeiro ao Leite" data-size="P" data-price="80" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Choco-ninho -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Choco-ninho" alt="Choco-ninho" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Choco-ninho</h4>
+                            <p class="text-white mt-2">Massa de chocolate com recheio de brigadeiro e ninho.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-ninho" data-size="G" data-price="240" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-ninho" data-size="M" data-price="160" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-ninho" data-size="P" data-price="80" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Choco-coco -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Choco-coco" alt="Choco-coco" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Choco-coco</h4>
+                            <p class="text-white mt-2">Massa de chocolate com recheio de brigadeiro e beijinho.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando um tamanho</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-coco" data-size="G" data-price="240" data-details="20 cm | 30 fatias">
+                                    <span class="text-xl font-bold tracking-tight">G</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-coco" data-size="M" data-price="160" data-details="15 cm | 20 fatias">
+                                    <span class="text-xl font-bold tracking-tight">M</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Bolo Tradicional - Choco-coco" data-size="P" data-price="80" data-details="11 cm | 8 fatias">
+                                    <span class="text-xl font-bold tracking-tight">P</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="doces" class="py-8">
+            <h2 class="text-3xl font-bold text-center text-[#ff7395] mb-8">Doces</h2>
+            <div class="space-y-12">
+                <!-- Doces Premium -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Premium</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Square de Morango -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Square+de+Morango" alt="Square de Morango" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Square de Morango</h4>
+                            <p class="text-white mt-2">Casquinha de chocolate nobre meio amargo recheada de 4 leites cremoso e morango.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square de Morango" data-size="100un" data-price="330" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square de Morango" data-size="50un" data-price="165" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square de Morango" data-size="25un" data-price="100" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Square tropical -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Square+tropical" alt="Square tropical" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Square Tropical</h4>
+                            <p class="text-white mt-2">Casquinha de chocolate nobre ao leite recheada de mousse de limão ou maracujá.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Tropical" data-size="100un" data-price="330" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Tropical" data-size="50un" data-price="165" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Tropical" data-size="25un" data-price="100" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Square Frutas vermelhas -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Square+Frutas+Vermelhas" alt="Square Frutas vermelhas" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Square Frutas Vermelhas</h4>
+                            <p class="text-white mt-2">Casquinha de chocolate nobre meio amargo recheada com ninho e geleia de frutas vermelhas.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Frutas Vermelhas" data-size="100un" data-price="330" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Frutas Vermelhas" data-size="50un" data-price="165" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Premium - Square Frutas Vermelhas" data-size="25un" data-price="100" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doces Gourmet -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Gourmet</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Brigadeiro ao Leite -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Brigadeiro+ao+Leite" alt="Brigadeiro ao Leite" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Brigadeiro ao Leite</h4>
+                            <p class="text-white mt-2">Feito e coberto com chocolate nobre ao leite.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro ao Leite" data-size="100un" data-price="190" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro ao Leite" data-size="50un" data-price="95" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro ao Leite" data-size="25un" data-price="60" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Brigadeiro meio Amargo -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Brigadeiro+Meio+Amargo" alt="Brigadeiro meio Amargo" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Brigadeiro Meio Amargo</h4>
+                            <p class="text-white mt-2">Feito e coberto com chocolate nobre meio amargo.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro Meio Amargo" data-size="100un" data-price="190" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro Meio Amargo" data-size="50un" data-price="95" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Brigadeiro Meio Amargo" data-size="25un" data-price="60" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Ferrero Rocher -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Ferrero+Rocher" alt="Ferrero Rocher" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Ferrero Rocher</h4>
+                            <p class="text-white mt-2">Brigadeiro gourmet coberto com castanha de caju e Nutella.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Ferrero Rocher" data-size="100un" data-price="190" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Ferrero Rocher" data-size="50un" data-price="95" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Gourmet - Ferrero Rocher" data-size="25un" data-price="60" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doces Tradicionais -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-[#4b0082] mb-4 border-b-2 border-gray-300 pb-2">Tradicionais</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Brigadeiro -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Brigadeiro" alt="Brigadeiro" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Brigadeiro</h4>
+                            <p class="text-white mt-2">Brigadeiro com granulado tradicional.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Brigadeiro" data-size="100un" data-price="130" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Brigadeiro" data-size="50un" data-price="65" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Brigadeiro" data-size="25un" data-price="40" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Beijinho -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Beijinho" alt="Beijinho" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Beijinho</h4>
+                            <p class="text-white mt-2">Beijinho tradicional com coco flocado.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Beijinho" data-size="100un" data-price="130" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Beijinho" data-size="50un" data-price="65" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Beijinho" data-size="25un" data-price="40" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                        <!-- Casadinho -->
+                        <div class="product-card bg-[#ff7395] rounded-lg shadow-xl p-6 transform hover:scale-105 transition-transform duration-300">
+                            <img src="https://placehold.co/400x300/fce4ec/4b0082?text=Casadinho" alt="Casadinho" class="rounded-md w-full mb-4">
+                            <h4 class="text-xl font-bold text-white">Casadinho</h4>
+                            <p class="text-white mt-2">Brigadeiro com beijinho.</p>
+                            <p class="text-sm font-semibold text-center text-white mt-4">Descubra o valor selecionando uma quantidade</p>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Casadinho" data-size="100un" data-price="130" data-details="100 unidades">
+                                    <span class="text-lg font-bold tracking-tight">100 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Casadinho" data-size="50un" data-price="65" data-details="50 unidades">
+                                    <span class="text-lg font-bold tracking-tight">50 und</span>
+                                </div>
+                                <div class="product-option size-selection-btn rounded-xl w-24 text-center p-2" data-product-name="Doce Tradicional - Casadinho" data-size="25un" data-price="40" data-details="25 unidades">
+                                    <span class="text-lg font-bold tracking-tight">25 und</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 expanded-details flex flex-col items-center">
+                                <p class="text-white text-lg font-bold"><span class="expanded-price"></span></p>
+                                <p class="text-sm text-white font-semibold mb-2"><span class="expanded-details-text"></span></p>
+                                <button class="add-to-cart-btn bg-white text-[#ff7395] px-4 py-2 rounded-full font-bold w-full hover:bg-[#5ce1e6] hover:text-white transition-colors">Adicionar ao orçamento</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Carrinho Modal -->
+        <div id="cart-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-[#ff7395] rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center border-b pb-4 mb-4 border-white border-opacity-30">
+                    <h3 class="text-2xl font-bold text-white">Seu Carrinho</h3>
+                    <button id="close-cart-modal-btn" class="text-white hover:text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="cart-items" class="flex-1 overflow-y-auto scroll-container pr-2 text-white">
+                    <!-- Cart items will be injected here -->
+                    <p class="text-center text-white" id="empty-cart-message">Seu carrinho está vazio.</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-white border-opacity-30 flex flex-col items-center">
+                    <div class="text-center w-full mb-4">
+                        <p class="text-xl font-bold text-white">Total: <span id="cart-total" class="text-white">R$ 0,00</span></p>
+                    </div>
+                    <button id="checkout-btn" class="bg-white text-[#ff7395] px-6 py-3 rounded-full font-bold hover:bg-[#5ce1e6] hover:text-white w-full md:w-auto transition-colors duration-300 focus:outline-none">
+                        Finalizar seu pedido com vendedor
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#5ce1e6] text-white text-center py-4 mt-8">
+        <p class="text-sm">&copy; 2024 Camilly Messias. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const cartCounter = document.getElementById('cart-counter');
+        const cartBtn = document.getElementById('cart-btn');
+        const cartModal = document.getElementById('cart-modal');
+        const closeCartModalBtn = document.getElementById('close-cart-modal-btn');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalDisplay = document.getElementById('cart-total');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeMobileMenuBtn = document.getElementById('close-mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        // Banner logic
+        const carousel = document.getElementById('carousel-images');
+        let currentIndex = 0;
+        const totalItems = carousel.children.length;
+        const intervalTime = 3000; // 3 seconds
+
+        function updateCarousel() {
+            carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateCarousel();
+        }
+
+        let autoSlide = setInterval(nextSlide, intervalTime);
+
+        // Pause on hover
+        carousel.parentElement.addEventListener('mouseenter', () => {
+            clearInterval(autoSlide);
+        });
+
+        carousel.parentElement.addEventListener('mouseleave', () => {
+            autoSlide = setInterval(nextSlide, intervalTime);
+        });
+
+
+        // Function to update the cart counter and pulse effect
+        function updateCartCounter() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCounter.textContent = totalItems;
+            if (totalItems > 0) {
+                cartCounter.classList.remove('opacity-0');
+            } else {
+                cartCounter.classList.add('opacity-0');
+            }
+            cartBtn.classList.add('pulse-once');
+            setTimeout(() => {
+                cartBtn.classList.remove('pulse-once');
+            }, 300);
+        }
+
+        // Function to render cart items in the modal
+        function renderCartItems() {
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+                checkoutBtn.disabled = true;
+                checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                emptyCartMessage.classList.add('hidden');
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                cart.forEach((item, index) => {
+                    const itemElement = document.createElement('div');
+                    itemElement.classList.add('flex', 'items-center', 'justify-between', 'py-2', 'border-b', 'border-white', 'border-opacity-30');
+                    itemElement.innerHTML = `
+                        <div class="flex-1">
+                            <p class="font-bold text-white">${item.name} <span class="text-sm font-normal text-white text-opacity-80">(${item.size})</span></p>
+                            <p class="text-sm text-white text-opacity-80">R$ ${item.price.toFixed(2).replace('.', ',')}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="remove-from-cart-btn text-white font-bold text-lg p-1 rounded-full hover:bg-white hover:text-[#ff7395] transition-colors" data-index="${index}">&minus;</button>
+                            <span class="text-lg font-bold text-white w-6 text-center">${item.quantity}</span>
+                            <button class="add-one-to-cart-btn text-white font-bold text-lg p-1 rounded-full hover:bg-white hover:text-[#ff7395] transition-colors" data-index="${index}">&plus;</button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(itemElement);
+                    total += item.price * item.quantity;
+                });
+            }
+            cartTotalDisplay.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Event listener for size selection buttons
+        document.querySelectorAll('.size-selection-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const parentCard = e.currentTarget.closest('.product-card');
+                const allSizeButtons = parentCard.querySelectorAll('.size-selection-btn');
+                const expandedDetails = parentCard.querySelector('.expanded-details');
+                const expandedPrice = expandedDetails.querySelector('.expanded-price');
+                const expandedDetailsText = expandedDetails.querySelector('.expanded-details-text');
+                const addToCartBtn = expandedDetails.querySelector('.add-to-cart-btn');
+
+                // Reset all buttons and hide all expanded details in the same card
+                allSizeButtons.forEach(btn => btn.classList.remove('active'));
+                expandedDetails.classList.remove('show');
+                
+                // Set the current button as active
+                e.currentTarget.classList.add('active');
+
+                // Get product data from the clicked button
+                const name = e.currentTarget.dataset.productName;
+                const size = e.currentTarget.dataset.size;
+                const price = parseFloat(e.currentTarget.dataset.price);
+                const details = e.currentTarget.dataset.details;
+                
+                // Update the expanded details
+                expandedPrice.textContent = `R$ ${price.toFixed(2).replace('.', ',')}`;
+                expandedDetailsText.textContent = details;
+                
+                // Set the data for the add-to-cart button
+                addToCartBtn.dataset.id = `${name.replace(/\s+/g, '-').toLowerCase()}-${size}`;
+                addToCartBtn.dataset.name = name;
+                addToCartBtn.dataset.price = price;
+                addToCartBtn.dataset.size = size;
+
+                // Show the expanded details with animation
+                expandedDetails.classList.add('show');
+            });
+        });
+
+        // Add event listener to all "add to cart" buttons
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                const name = e.currentTarget.dataset.name;
+                const price = parseFloat(e.currentTarget.dataset.price);
+                const size = e.currentTarget.dataset.size;
+                const existingItemIndex = cart.findIndex(item => item.id === id);
+
+                if (existingItemIndex !== -1) {
+                    cart[existingItemIndex].quantity += 1;
+                } else {
+                    cart.push({ id, name, price, size, quantity: 1 });
+                }
+
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCounter();
+            });
+        });
+
+        // Event listener for cart modal
+        cartBtn.addEventListener('click', () => {
+            renderCartItems();
+            cartModal.classList.remove('hidden');
+        });
+
+        closeCartModalBtn.addEventListener('click', () => {
+            cartModal.classList.add('hidden');
+        });
+
+        cartModal.addEventListener('click', (e) => {
+            if (e.target.id === 'cart-modal') {
+                cartModal.classList.add('hidden');
+            }
+        });
+
+        // Event listener for adding/removing items in the modal
+        cartItemsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-one-to-cart-btn')) {
+                const index = e.target.dataset.index;
+                cart[index].quantity += 1;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCartItems();
+                updateCartCounter();
+            } else if (e.target.classList.contains('remove-from-cart-btn')) {
+                const index = e.target.dataset.index;
+                cart[index].quantity -= 1;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCartItems();
+                updateCartCounter();
+            }
+        });
+
+        // Event listener for checkout button
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) return;
+            const message = cart.map(item => `${item.quantity}x ${item.name} (${item.size}) - R$ ${item.price.toFixed(2).replace('.', ',')}`).join('\n');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const fullMessage = `Olá, gostaria de fazer um pedido!\n\n${message}\n\nTotal: R$ ${total.toFixed(2).replace('.', ',')}`;
+            const encodedMessage = encodeURIComponent(fullMessage);
+            const whatsappUrl = `https://wa.me/5518988043768?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Clear cart after checkout
+            cart.length = 0;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCounter();
+            cartModal.classList.add('hidden');
+        });
+
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('-translate-x-full');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        closeMobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+        // Initial update
+        updateCartCounter();
+    </script>
+</body>
+</html>
